@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/shared/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -18,17 +19,54 @@ const CreateTicketPage = () => {
   const [category, setCategory] = useState<TicketCategory>('Technical');
   const [priority, setPriority] = useState<TicketPriority>('Medium');
   const [loading, setLoading] = useState(false);
+  const [files, setFiles] = useState<FileList | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { token } = useAuth();
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (title.length < 5) { toast.error('Title must be at least 5 characters'); return; }
     if (description.length < 20) { toast.error('Description must be at least 20 characters'); return; }
     setLoading(true);
-    setTimeout(() => {
-      toast.success('Ticket created successfully!');
-      navigate('/tickets');
+    try {
+      const res = await fetch('http://localhost:5001/api/tickets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ title, description, category, priority })
+      });
+      const data = await res.json();
+      if (res.ok && data.ticket) {
+        // If files are attached, upload them
+        if (files && files.length > 0) {
+          const formData = new FormData();
+          formData.append('ticketId', data.ticket._id);
+          Array.from(files).forEach(file => formData.append('files', file));
+          const uploadRes = await fetch('http://localhost:5001/api/upload/ticket-attachments', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData
+          });
+          const uploadData = await uploadRes.json();
+          if (uploadRes.ok) {
+            toast.success('Files uploaded successfully!');
+          } else {
+            toast.error(uploadData.message || 'File upload failed.');
+          }
+        }
+        setLoading(false);
+        toast.success('Ticket created successfully!');
+        navigate(`/tickets/${data.ticket._id}`);
+      } else {
+        setLoading(false);
+        toast.error(data.message || 'Failed to create ticket.');
+      }
+    } catch (err) {
       setLoading(false);
-    }, 800);
+      toast.error('Network error. Please try again.');
+    }
   };
 
   return (
@@ -81,10 +119,35 @@ const CreateTicketPage = () => {
           {/* Upload zone */}
           <div>
             <Label>Attachments (optional)</Label>
-            <div className="mt-1.5 border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
+            <div
+              className="mt-1.5 border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
+              onDrop={e => {
+                e.preventDefault();
+                setFiles(e.dataTransfer.files);
+              }}
+              onDragOver={e => e.preventDefault()}
+            >
               <Upload size={32} className="mx-auto text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground">Drag & drop files here, or click to browse</p>
               <p className="text-xs text-muted-foreground mt-1">JPG, PNG, PDF, DOC up to 10MB each</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                style={{ display: 'none' }}
+                onChange={e => setFiles(e.target.files)}
+              />
+              {files && files.length > 0 && (
+                <div className="mt-3 text-xs text-foreground">
+                  <strong>Selected files:</strong>
+                  <ul>
+                    {Array.from(files).map((file, idx) => (
+                      <li key={idx}>{file.name}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
 

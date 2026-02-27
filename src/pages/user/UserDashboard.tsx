@@ -1,39 +1,54 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/shared/DashboardLayout';
 import { StatCard } from '@/components/shared/StatCard';
-import { StatusBadge, PriorityBadge, CategoryBadge } from '@/components/shared/Badges';
-import { mockTickets } from '@/lib/mock-data';
-import { useAuth } from '@/contexts/AuthContext';
 import { Ticket, AlertCircle, Clock, CheckCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { formatDistanceToNow } from 'date-fns';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, CartesianGrid, XAxis, YAxis, Bar } from 'recharts';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { StatusBadge, PriorityBadge } from '@/components/shared/Badges';
+import { formatDistanceToNow } from 'date-fns';
 
 const COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#6b7280', '#ef4444'];
+const BASE_URL = 'http://localhost:5001';
 
 const UserDashboard = () => {
-  const { user } = useAuth();
-  const myTickets = mockTickets.filter(t => t.createdBy === user?.id);
-  const stats = {
-    total: myTickets.length,
-    open: myTickets.filter(t => t.status === 'Open').length,
-    inProgress: myTickets.filter(t => t.status === 'In Progress').length,
-    resolved: myTickets.filter(t => t.status === 'Resolved').length,
-  };
+  const { user, token } = useAuth();
+  const [stats, setStats] = useState({ total: 0, open: 0, inProgress: 0, resolved: 0 });
+  const [statusData, setStatusData] = useState<any[]>([]);
+  const [categoryData, setCategoryData] = useState<any[]>([]);
+  const [recentTickets, setRecentTickets] = useState<any[]>([]);
 
-  const statusData = [
-    { name: 'Open', count: stats.open },
-    { name: 'In Progress', count: stats.inProgress },
-    { name: 'Resolved', count: stats.resolved },
-    { name: 'Closed', count: myTickets.filter(t => t.status === 'Closed').length },
-    { name: 'Reopened', count: myTickets.filter(t => t.status === 'Reopened').length },
-  ].filter(d => d.count > 0);
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${BASE_URL}/api/dashboard/user`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data) {
+          setStats(data.myStats);
+          setRecentTickets(data.recentTickets || []);
+          setStatusData([
+            { name: 'Open', count: data.myStats.open },
+            { name: 'In Progress', count: data.myStats.inProgress },
+            { name: 'Resolved', count: data.myStats.resolved },
+          ].filter(d => d.count > 0));
+          // Calculate categoryData from backend data directly
+          const tickets = data.recentTickets || [];
+          setCategoryData([
+            { name: 'Technical', count: tickets.filter(t => t.category === 'Technical').length },
+            { name: 'Billing', count: tickets.filter(t => t.category === 'Billing').length },
+            { name: 'General', count: tickets.filter(t => t.category === 'General').length },
+            { name: 'Sales', count: tickets.filter(t => t.category === 'Sales').length },
+            { name: 'Product', count: tickets.filter(t => t.category === 'Product').length },
+          ].filter(d => d.count > 0));
+        }
+      });
+  }, [token]);
 
-  const categoryData = ['Technical', 'Billing', 'General', 'Sales', 'Product'].map(cat => ({
-    name: cat,
-    count: myTickets.filter(t => t.category === cat).length,
-  })).filter(d => d.count > 0);
+  const myTickets = recentTickets;
 
   return (
     <DashboardLayout>
@@ -97,7 +112,7 @@ const UserDashboard = () => {
             </thead>
             <tbody>
               {myTickets.slice(0, 5).map(ticket => (
-                <tr key={ticket.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
+                <tr key={ticket.id || ticket.ticketNumber} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
                   <td className="py-3 px-2 font-mono text-xs text-primary">{ticket.ticketNumber}</td>
                   <td className="py-3 px-2">
                     <Link to={`/tickets/${ticket.id}`} className="text-foreground hover:text-primary font-medium">{ticket.title}</Link>

@@ -1,8 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/shared/DashboardLayout';
 import { StatusBadge, PriorityBadge, CategoryBadge } from '@/components/shared/Badges';
-import { mockTickets } from '@/lib/mock-data';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,12 +12,21 @@ import { Plus, Search } from 'lucide-react';
 import { TicketStatus } from '@/lib/types';
 
 const MyTicketsPage = () => {
-  const { user } = useAuth();
+  const { token } = useAuth();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [myTickets, setMyTickets] = useState<any[]>([]);
 
-  const myTickets = mockTickets
-    .filter(t => t.createdBy === user?.id)
+  useEffect(() => {
+    if (!token) return;
+    fetch('http://localhost:5001/api/tickets/my-tickets', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.ok ? res.json() : [])
+      .then(data => setMyTickets(data || []));
+  }, [token]);
+
+  const filteredTickets = myTickets
     .filter(t => statusFilter === 'all' || t.status === statusFilter)
     .filter(t => !search || t.title.toLowerCase().includes(search.toLowerCase()) || t.ticketNumber.toLowerCase().includes(search.toLowerCase()));
 
@@ -27,7 +35,7 @@ const MyTicketsPage = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">My Tickets</h1>
-          <p className="text-muted-foreground">{myTickets.length} tickets</p>
+          <p className="text-muted-foreground">{filteredTickets.length} tickets</p>
         </div>
         <Link to="/tickets/create"><Button><Plus size={16} className="mr-2" /> New Ticket</Button></Link>
       </div>
@@ -50,9 +58,9 @@ const MyTicketsPage = () => {
       </div>
 
       <div className="space-y-3">
-        {myTickets.map((ticket, i) => (
-          <motion.div key={ticket.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-            <Link to={`/tickets/${ticket.id}`} className="block glass-card rounded-xl p-4 hover:shadow-md transition-shadow">
+        {filteredTickets.map((ticket, i) => (
+          <motion.div key={ticket._id || ticket.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+            <Link to={`/tickets/${ticket._id || ticket.id}`} className="block glass-card rounded-xl p-4 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -71,7 +79,7 @@ const MyTicketsPage = () => {
             </Link>
           </motion.div>
         ))}
-        {myTickets.length === 0 && (
+        {filteredTickets.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
             <p>No tickets found.</p>
             <Link to="/tickets/create"><Button variant="outline" className="mt-4">Create your first ticket</Button></Link>

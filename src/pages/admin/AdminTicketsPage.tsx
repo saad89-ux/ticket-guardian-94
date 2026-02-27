@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/shared/DashboardLayout';
 import { StatusBadge, PriorityBadge, CategoryBadge } from '@/components/shared/Badges';
@@ -10,13 +11,25 @@ import { motion } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { Search } from 'lucide-react';
 
+const BASE_URL = 'http://localhost:5001';
 const AdminTicketsPage = () => {
+  const { token } = useAuth();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [tickets, setTickets] = useState<any[]>([]);
 
-  const tickets = mockTickets
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${BASE_URL}/api/tickets/admin/all`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.ok ? res.json() : [])
+      .then(data => setTickets(data || []));
+  }, [token]);
+
+  const filteredTickets = tickets
     .filter(t => statusFilter === 'all' || t.status === statusFilter)
     .filter(t => priorityFilter === 'all' || t.priority === priorityFilter)
     .filter(t => categoryFilter === 'all' || t.category === categoryFilter)
@@ -26,7 +39,7 @@ const AdminTicketsPage = () => {
     <DashboardLayout>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">All Tickets</h1>
-        <p className="text-muted-foreground">{tickets.length} tickets system-wide</p>
+        <p className="text-muted-foreground">{filteredTickets.length} tickets system-wide</p>
       </div>
 
       <div className="flex flex-wrap gap-3 mb-6">
@@ -84,17 +97,17 @@ const AdminTicketsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {tickets.map(ticket => (
-                <tr key={ticket.id} className="border-b border-border/50 hover:bg-secondary/20 transition-colors">
+              {filteredTickets.map(ticket => (
+                <tr key={ticket._id || ticket.id} className="border-b border-border/50 hover:bg-secondary/20 transition-colors">
                   <td className="py-3 px-4">
-                    <Link to={`/superadmin/tickets/${ticket.id}`} className="font-mono text-xs text-primary hover:underline">{ticket.ticketNumber}</Link>
+                    <Link to={`/superadmin/tickets/${ticket._id || ticket.id}`} className="font-mono text-xs text-primary hover:underline">{ticket.ticketNumber}</Link>
                   </td>
                   <td className="py-3 px-4 text-foreground font-medium max-w-[200px] truncate">{ticket.title}</td>
-                  <td className="py-3 px-4 text-muted-foreground">{ticket.createdByName}</td>
+                  <td className="py-3 px-4 text-muted-foreground">{ticket.createdBy?.name || ticket.createdByName}</td>
                   <td className="py-3 px-4"><CategoryBadge category={ticket.category} /></td>
                   <td className="py-3 px-4"><StatusBadge status={ticket.status} /></td>
                   <td className="py-3 px-4"><PriorityBadge priority={ticket.priority} /></td>
-                  <td className="py-3 px-4 text-muted-foreground text-xs">{ticket.assignedToName || 'Unassigned'}</td>
+                  <td className="py-3 px-4 text-muted-foreground text-xs">{ticket.assignedTo?.name || ticket.assignedToName || 'Unassigned'}</td>
                   <td className="py-3 px-4 text-muted-foreground text-xs">{formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}</td>
                 </tr>
               ))}

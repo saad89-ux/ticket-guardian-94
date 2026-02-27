@@ -1,18 +1,32 @@
 import { DashboardLayout } from '@/components/shared/DashboardLayout';
-import { mockUsers, mockAgentPerformance } from '@/lib/mock-data';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { UserPlus, Shield, ShieldOff } from 'lucide-react';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+const BASE_URL = 'http://localhost:5001';
 const AdminAgentsPage = () => {
-  const agents = mockUsers.filter(u => u.role === 'agent');
+  const { token } = useAuth();
   const [open, setOpen] = useState(false);
+  const [agents, setAgents] = useState<any[]>([]);
+  const [performance, setPerformance] = useState<any[]>([]);
+  const [department, setDepartment] = useState('Technical');
+
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${BASE_URL}/api/users/agents`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.ok ? res.json() : [])
+      .then(data => setAgents(data || []));
+    // Removed non-existent /performance endpoint per Postman collection
+  }, [token]);
 
   return (
     <DashboardLayout>
@@ -27,13 +41,41 @@ const AdminAgentsPage = () => {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Create New Agent</DialogTitle></DialogHeader>
-            <form className="space-y-4" onSubmit={e => { e.preventDefault(); toast.success('Agent created!'); setOpen(false); }}>
+            <form className="space-y-4" onSubmit={async e => {
+              e.preventDefault();
+              const form = e.target as HTMLFormElement;
+              const name = (form[0] as HTMLInputElement).value;
+              const email = (form[1] as HTMLInputElement).value;
+              const password = (form[2] as HTMLInputElement).value;
+              const res = await fetch(`${BASE_URL}/api/users/agent`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ name, email, password, department })
+              });
+              const data = await res.json();
+              console.log(data);
+              if (res.ok) {
+                toast.success('Agent created!');
+                setOpen(false);
+                // Refresh agent list
+                fetch(`${BASE_URL}/api/users/agents`, {
+                  headers: { Authorization: `Bearer ${token}` }
+                })
+                  .then(res => res.ok ? res.json() : [])
+                  .then(data => setAgents(data || []));
+              } else {
+                toast.error(data.message || 'Failed to create agent');
+              }
+            }}>
               <div><Label>Full Name</Label><Input placeholder="Agent name" className="mt-1.5" required /></div>
               <div><Label>Email</Label><Input type="email" placeholder="agent@support.com" className="mt-1.5" required /></div>
               <div><Label>Password</Label><Input type="password" placeholder="Temporary password" className="mt-1.5" required /></div>
               <div>
                 <Label>Department</Label>
-                <Select defaultValue="Technical">
+                <Select value={department} onValueChange={setDepartment} name="department">
                   <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Technical">Technical</SelectItem>
@@ -67,9 +109,9 @@ const AdminAgentsPage = () => {
             </thead>
             <tbody>
               {agents.map(agent => {
-                const perf = mockAgentPerformance.find(p => p.agentId === agent.id);
+                const perf = performance.find(p => p.agentId === (agent._id || agent.id));
                 return (
-                  <tr key={agent.id} className="border-b border-border/50 hover:bg-secondary/20 transition-colors">
+                  <tr key={agent._id || agent.id} className="border-b border-border/50 hover:bg-secondary/20 transition-colors">
                     <td className="py-3 px-4 font-medium text-foreground">{agent.name}</td>
                     <td className="py-3 px-4 text-muted-foreground">{agent.email}</td>
                     <td className="py-3 px-4 text-muted-foreground">{agent.department}</td>
@@ -85,7 +127,23 @@ const AdminAgentsPage = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => toast.success(agent.isActive !== false ? 'Agent deactivated' : 'Agent reactivated')}
+                        onClick={async () => {
+                          const res = await fetch(`${BASE_URL}/api/users/agent/${agent._id || agent.id}/${agent.isActive !== false ? 'deactivate' : 'activate'}`, {
+                            method: 'PUT',
+                            headers: { Authorization: `Bearer ${token}` }
+                          });
+                          if (res.ok) {
+                            toast.success(agent.isActive !== false ? 'Agent deactivated' : 'Agent reactivated');
+                            // Refresh agent list
+                            fetch(`${BASE_URL}/api/users/agents`, {
+                              headers: { Authorization: `Bearer ${token}` }
+                            })
+                              .then(res => res.ok ? res.json() : [])
+                              .then(data => setAgents(data || []));
+                          } else {
+                            toast.error('Failed to update agent status');
+                          }
+                        }}
                       >
                         {agent.isActive !== false ? <ShieldOff size={14} /> : <Shield size={14} />}
                       </Button>
