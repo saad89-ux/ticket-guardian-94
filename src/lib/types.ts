@@ -1,8 +1,8 @@
-export type UserRole = 'user' | 'agent' | 'superadmin';
+export type UserRole = 'admin' | 'doctor' | 'receptionist' | 'patient';
 
-export type TicketStatus = 'Open' | 'In Progress' | 'Resolved' | 'Closed' | 'Reopened';
-export type TicketPriority = 'Low' | 'Medium' | 'High' | 'Critical';
-export type TicketCategory = 'Technical' | 'Billing' | 'General' | 'Sales' | 'Product';
+export type AppointmentStatus = 'Pending' | 'Confirmed' | 'Completed' | 'Cancelled';
+export type SubscriptionPlan = 'free' | 'pro';
+export type RiskLevel = 'Low' | 'Medium' | 'High' | 'Critical';
 
 export interface User {
   id: string;
@@ -10,64 +10,88 @@ export interface User {
   email: string;
   role: UserRole;
   department?: string;
+  specialization?: string;
+  phone?: string;
   isActive?: boolean;
+  subscriptionPlan?: SubscriptionPlan;
   createdAt: string;
 }
 
-export interface TicketNote {
+export interface Patient {
   id: string;
-  content: string;
-  authorId: string;
-  authorName: string;
-  createdAt: string;
-}
-
-export interface Ticket {
-  id: string;
-  ticketNumber: string;
-  title: string;
-  description: string;
-  category: TicketCategory;
-  priority: TicketPriority;
-  status: TicketStatus;
+  name: string;
+  age: number;
+  gender: 'Male' | 'Female' | 'Other';
+  contact: string;
+  email?: string;
+  address?: string;
+  bloodGroup?: string;
+  allergies?: string[];
   createdBy: string;
-  createdByName: string;
-  assignedTo?: string;
-  assignedToName?: string;
-  notes: TicketNote[];
-  resolutionSummary?: string;
-  attachments: string[];
   createdAt: string;
-  updatedAt: string;
+}
+
+export interface Appointment {
+  id: string;
+  patientId: string;
+  patientName: string;
+  doctorId: string;
+  doctorName: string;
+  date: string;
+  time: string;
+  status: AppointmentStatus;
+  reason?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface Medicine {
+  name: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+}
+
+export interface Prescription {
+  id: string;
+  patientId: string;
+  patientName: string;
+  doctorId: string;
+  doctorName: string;
+  appointmentId?: string;
+  medicines: Medicine[];
+  instructions: string;
+  diagnosis: string;
+  aiExplanation?: string;
+  createdAt: string;
+}
+
+export interface DiagnosisLog {
+  id: string;
+  patientId: string;
+  patientName: string;
+  doctorId: string;
+  doctorName: string;
+  symptoms: string[];
+  aiResponse?: string;
+  possibleConditions?: string[];
+  riskLevel: RiskLevel;
+  suggestedTests?: string[];
+  createdAt: string;
 }
 
 export interface DashboardStats {
-  total: number;
-  open: number;
-  inProgress: number;
-  resolved: number;
-  closed?: number;
-  reopened?: number;
-  overdue?: number;
+  totalPatients: number;
+  totalDoctors: number;
+  totalAppointments: number;
+  monthlyAppointments: number;
+  revenue: number;
+  commonDiagnosis?: string;
 }
 
-export interface AgentPerformance {
-  agentId: string;
-  agentName: string;
-  department: string;
-  totalAssigned: number;
-  totalResolved: number;
-  avgResolutionTime: number;
-  rating: number;
-}
-
-export interface AuditLog {
-  id: string;
-  action: string;
-  performedBy: string;
-  performedByName: string;
-  targetType: string;
-  targetId: string;
-  details: string;
-  createdAt: string;
+export interface DoctorStats {
+  dailyAppointments: number;
+  monthlyAppointments: number;
+  totalPrescriptions: number;
+  totalPatientsSeen: number;
 }

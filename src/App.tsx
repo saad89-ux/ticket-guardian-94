@@ -10,22 +10,32 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
-import ProfilePage from "./pages/ProfilePage";
 
-import UserDashboard from "./pages/user/UserDashboard";
-import MyTicketsPage from "./pages/user/MyTicketsPage";
-import CreateTicketPage from "./pages/user/CreateTicketPage";
-
-import AgentDashboard from "./pages/agent/AgentDashboard";
-import AgentTicketsPage from "./pages/agent/AgentTicketsPage";
-
+// Admin
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminTicketsPage from "./pages/admin/AdminTicketsPage";
-import AdminAgentsPage from "./pages/admin/AdminAgentsPage";
+import AdminDoctorsPage from "./pages/admin/AdminDoctorsPage";
+import AdminReceptionistsPage from "./pages/admin/AdminReceptionistsPage";
 import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
-import AuditLogsPage from "./pages/admin/AuditLogsPage";
+import AdminSubscriptionsPage from "./pages/admin/AdminSubscriptionsPage";
 
-import TicketDetailPage from "./pages/TicketDetailPage";
+// Doctor
+import DoctorDashboard from "./pages/doctor/DoctorDashboard";
+import DoctorAppointmentsPage from "./pages/doctor/DoctorAppointmentsPage";
+import DoctorPatientsPage from "./pages/doctor/DoctorPatientsPage";
+import DoctorPrescriptionsPage from "./pages/doctor/DoctorPrescriptionsPage";
+import DoctorAIDiagnosisPage from "./pages/doctor/DoctorAIDiagnosisPage";
+
+// Receptionist
+import ReceptionistDashboard from "./pages/receptionist/ReceptionistDashboard";
+import ReceptionistPatientsPage from "./pages/receptionist/ReceptionistPatientsPage";
+import ReceptionistAppointmentsPage from "./pages/receptionist/ReceptionistAppointmentsPage";
+import ReceptionistRegisterPatientPage from "./pages/receptionist/ReceptionistRegisterPatientPage";
+
+// Patient
+import PatientDashboard from "./pages/patient/PatientDashboard";
+import PatientAppointmentsPage from "./pages/patient/PatientAppointmentsPage";
+import PatientPrescriptionsPage from "./pages/patient/PatientPrescriptionsPage";
+import PatientHistoryPage from "./pages/patient/PatientHistoryPage";
 
 const queryClient = new QueryClient();
 
@@ -37,31 +47,35 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Public */}
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
 
-            {/* User routes */}
-            <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['user']}><UserDashboard /></ProtectedRoute>} />
-            <Route path="/tickets" element={<ProtectedRoute allowedRoles={['user']}><MyTicketsPage /></ProtectedRoute>} />
-            <Route path="/tickets/create" element={<ProtectedRoute allowedRoles={['user']}><CreateTicketPage /></ProtectedRoute>} />
-            <Route path="/tickets/:id" element={<ProtectedRoute allowedRoles={['user']}><TicketDetailPage /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute allowedRoles={['user', 'agent', 'superadmin']}><ProfilePage /></ProtectedRoute>} />
+            {/* Admin */}
+            <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/doctors" element={<ProtectedRoute allowedRoles={['admin']}><AdminDoctorsPage /></ProtectedRoute>} />
+            <Route path="/admin/receptionists" element={<ProtectedRoute allowedRoles={['admin']}><AdminReceptionistsPage /></ProtectedRoute>} />
+            <Route path="/admin/analytics" element={<ProtectedRoute allowedRoles={['admin']}><AdminAnalyticsPage /></ProtectedRoute>} />
+            <Route path="/admin/subscriptions" element={<ProtectedRoute allowedRoles={['admin']}><AdminSubscriptionsPage /></ProtectedRoute>} />
 
-            {/* Agent routes */}
-            <Route path="/agent/dashboard" element={<ProtectedRoute allowedRoles={['agent']}><AgentDashboard /></ProtectedRoute>} />
-            <Route path="/agent/tickets" element={<ProtectedRoute allowedRoles={['agent']}><AgentTicketsPage /></ProtectedRoute>} />
-            <Route path="/agent/tickets/:id" element={<ProtectedRoute allowedRoles={['agent']}><TicketDetailPage /></ProtectedRoute>} />
-            <Route path="/agent/profile" element={<ProtectedRoute allowedRoles={['agent']}><ProfilePage /></ProtectedRoute>} />
+            {/* Doctor */}
+            <Route path="/doctor/dashboard" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorDashboard /></ProtectedRoute>} />
+            <Route path="/doctor/appointments" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorAppointmentsPage /></ProtectedRoute>} />
+            <Route path="/doctor/patients" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorPatientsPage /></ProtectedRoute>} />
+            <Route path="/doctor/prescriptions" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorPrescriptionsPage /></ProtectedRoute>} />
+            <Route path="/doctor/ai-diagnosis" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorAIDiagnosisPage /></ProtectedRoute>} />
 
-            {/* Super Admin routes */}
-            <Route path="/superadmin/dashboard" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminDashboard /></ProtectedRoute>} />
-            <Route path="/superadmin/tickets" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminTicketsPage /></ProtectedRoute>} />
-            <Route path="/superadmin/tickets/:id" element={<ProtectedRoute allowedRoles={['superadmin']}><TicketDetailPage /></ProtectedRoute>} />
-            <Route path="/superadmin/agents" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminAgentsPage /></ProtectedRoute>} />
-            <Route path="/superadmin/analytics" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminAnalyticsPage /></ProtectedRoute>} />
-            <Route path="/superadmin/audit-logs" element={<ProtectedRoute allowedRoles={['superadmin']}><AuditLogsPage /></ProtectedRoute>} />
+            {/* Receptionist */}
+            <Route path="/receptionist/dashboard" element={<ProtectedRoute allowedRoles={['receptionist']}><ReceptionistDashboard /></ProtectedRoute>} />
+            <Route path="/receptionist/patients" element={<ProtectedRoute allowedRoles={['receptionist']}><ReceptionistPatientsPage /></ProtectedRoute>} />
+            <Route path="/receptionist/appointments" element={<ProtectedRoute allowedRoles={['receptionist']}><ReceptionistAppointmentsPage /></ProtectedRoute>} />
+            <Route path="/receptionist/register-patient" element={<ProtectedRoute allowedRoles={['receptionist']}><ReceptionistRegisterPatientPage /></ProtectedRoute>} />
+
+            {/* Patient */}
+            <Route path="/patient/dashboard" element={<ProtectedRoute allowedRoles={['patient']}><PatientDashboard /></ProtectedRoute>} />
+            <Route path="/patient/appointments" element={<ProtectedRoute allowedRoles={['patient']}><PatientAppointmentsPage /></ProtectedRoute>} />
+            <Route path="/patient/prescriptions" element={<ProtectedRoute allowedRoles={['patient']}><PatientPrescriptionsPage /></ProtectedRoute>} />
+            <Route path="/patient/history" element={<ProtectedRoute allowedRoles={['patient']}><PatientHistoryPage /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

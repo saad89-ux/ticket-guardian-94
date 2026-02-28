@@ -1,64 +1,94 @@
-import { Ticket, User, AgentPerformance, AuditLog, TicketStatus, TicketPriority, TicketCategory } from './types';
+import { User, Patient, Appointment, Prescription, DiagnosisLog } from './types';
 
+// ── Users ──
 export const mockUsers: User[] = [
-  { id: 'u1', name: 'John Carter', email: 'john@example.com', role: 'user', createdAt: '2024-01-15' },
-  { id: 'u2', name: 'Sarah Miller', email: 'sarah@example.com', role: 'user', createdAt: '2024-02-10' },
-  { id: 'a1', name: 'Ahmed Khan', email: 'ahmed@support.com', role: 'agent', department: 'Technical', isActive: true, createdAt: '2024-01-01' },
-  { id: 'a2', name: 'Sara Ali', email: 'sara@support.com', role: 'agent', department: 'Billing', isActive: true, createdAt: '2024-01-05' },
-  { id: 'a3', name: 'James Wilson', email: 'james@support.com', role: 'agent', department: 'General', isActive: true, createdAt: '2024-01-10' },
-  { id: 'a4', name: 'Maria Lopez', email: 'maria@support.com', role: 'agent', department: 'Technical', isActive: false, createdAt: '2024-02-01' },
-  { id: 'sa1', name: 'Admin User', email: 'admin@support.com', role: 'superadmin', createdAt: '2023-12-01' },
+  { id: 'admin-1', name: 'Dr. Sarah Khan', email: 'admin@clinic.com', role: 'admin', isActive: true, subscriptionPlan: 'pro', createdAt: '2024-01-01' },
+  { id: 'doc-1', name: 'Dr. Ahmed Ali', email: 'ahmed@clinic.com', role: 'doctor', specialization: 'General Physician', isActive: true, createdAt: '2024-01-10' },
+  { id: 'doc-2', name: 'Dr. Fatima Noor', email: 'fatima@clinic.com', role: 'doctor', specialization: 'Dermatologist', isActive: true, createdAt: '2024-02-15' },
+  { id: 'doc-3', name: 'Dr. Hassan Raza', email: 'hassan@clinic.com', role: 'doctor', specialization: 'Cardiologist', isActive: false, createdAt: '2024-03-01' },
+  { id: 'rec-1', name: 'Ayesha Malik', email: 'ayesha@clinic.com', role: 'receptionist', isActive: true, createdAt: '2024-01-15' },
+  { id: 'rec-2', name: 'Bilal Shah', email: 'bilal@clinic.com', role: 'receptionist', isActive: true, createdAt: '2024-04-01' },
+  { id: 'pat-1', name: 'Ali Hussain', email: 'ali@patient.com', role: 'patient', createdAt: '2024-05-01' },
+  { id: 'pat-2', name: 'Sara Iqbal', email: 'sara@patient.com', role: 'patient', createdAt: '2024-05-15' },
 ];
 
-const statuses: TicketStatus[] = ['Open', 'In Progress', 'Resolved', 'Closed', 'Reopened'];
-const priorities: TicketPriority[] = ['Low', 'Medium', 'High', 'Critical'];
-const categories: TicketCategory[] = ['Technical', 'Billing', 'General', 'Sales', 'Product'];
-
-const titles = [
-  'Cannot login to dashboard', 'Payment processing failed', 'Password reset not working',
-  'Feature request: Dark mode', 'Invoice discrepancy', 'API rate limit exceeded',
-  'Mobile app crashes on startup', 'Billing address update', 'Account deactivation request',
-  'Integration webhook failing', 'SSL certificate expiring', 'Data export not working',
-  'User permissions issue', 'Email notifications delayed', 'Search functionality broken',
-  'Report generation timeout', 'Two-factor auth setup help', 'Subscription upgrade issue',
-  'Custom domain configuration', 'Database connection timeout',
+// ── Patients ──
+export const mockPatients: Patient[] = [
+  { id: 'p-1', name: 'Ali Hussain', age: 32, gender: 'Male', contact: '0300-1234567', email: 'ali@patient.com', bloodGroup: 'O+', allergies: ['Penicillin'], createdBy: 'rec-1', createdAt: '2024-05-01' },
+  { id: 'p-2', name: 'Sara Iqbal', age: 28, gender: 'Female', contact: '0312-9876543', email: 'sara@patient.com', bloodGroup: 'A+', allergies: [], createdBy: 'rec-1', createdAt: '2024-05-15' },
+  { id: 'p-3', name: 'Usman Tariq', age: 45, gender: 'Male', contact: '0321-5551234', bloodGroup: 'B+', allergies: ['Aspirin'], createdBy: 'rec-2', createdAt: '2024-06-01' },
+  { id: 'p-4', name: 'Zainab Fatima', age: 55, gender: 'Female', contact: '0333-7778899', bloodGroup: 'AB-', allergies: [], createdBy: 'rec-1', createdAt: '2024-06-10' },
+  { id: 'p-5', name: 'Hamza Sheikh', age: 22, gender: 'Male', contact: '0345-1112233', bloodGroup: 'O-', allergies: ['Sulfa drugs'], createdBy: 'rec-2', createdAt: '2024-07-01' },
+  { id: 'p-6', name: 'Nadia Khan', age: 38, gender: 'Female', contact: '0300-4445566', bloodGroup: 'A-', allergies: [], createdBy: 'rec-1', createdAt: '2024-07-15' },
 ];
 
-export const mockTickets: Ticket[] = Array.from({ length: 25 }, (_, i) => ({
-  id: `t${i + 1}`,
-  ticketNumber: `TKT-${String(i + 1).padStart(3, '0')}`,
-  title: titles[i % titles.length],
-  description: `Detailed description for ticket ${i + 1}. The user is experiencing issues that need to be investigated and resolved promptly.`,
-  category: categories[i % categories.length],
-  priority: priorities[i % priorities.length],
-  status: statuses[i % statuses.length],
-  createdBy: i % 2 === 0 ? 'u1' : 'u2',
-  createdByName: i % 2 === 0 ? 'John Carter' : 'Sarah Miller',
-  assignedTo: i % 5 < 3 ? `a${(i % 3) + 1}` : undefined,
-  assignedToName: i % 5 < 3 ? ['Ahmed Khan', 'Sara Ali', 'James Wilson'][i % 3] : undefined,
-  notes: i % 3 === 0 ? [
-    { id: `n${i}`, content: 'Initial investigation started. Looking into the root cause.', authorId: 'a1', authorName: 'Ahmed Khan', createdAt: '2024-03-10T14:30:00Z' },
-    { id: `n${i}b`, content: 'Found the issue. Working on a fix.', authorId: 'a1', authorName: 'Ahmed Khan', createdAt: '2024-03-11T09:15:00Z' },
-  ] : [],
-  resolutionSummary: statuses[i % statuses.length] === 'Resolved' ? 'Issue was resolved by applying the latest patch and clearing the cache.' : undefined,
-  attachments: [],
-  createdAt: new Date(2024, 2, i + 1).toISOString(),
-  updatedAt: new Date(2024, 2, i + 2).toISOString(),
-}));
-
-export const mockAgentPerformance: AgentPerformance[] = [
-  { agentId: 'a1', agentName: 'Ahmed Khan', department: 'Technical', totalAssigned: 45, totalResolved: 40, avgResolutionTime: 15.2, rating: 4.9 },
-  { agentId: 'a2', agentName: 'Sara Ali', department: 'Billing', totalAssigned: 38, totalResolved: 35, avgResolutionTime: 18.7, rating: 4.7 },
-  { agentId: 'a3', agentName: 'James Wilson', department: 'General', totalAssigned: 32, totalResolved: 28, avgResolutionTime: 20.1, rating: 4.5 },
-  { agentId: 'a4', agentName: 'Maria Lopez', department: 'Technical', totalAssigned: 15, totalResolved: 12, avgResolutionTime: 25.0, rating: 4.2 },
+// ── Appointments ──
+export const mockAppointments: Appointment[] = [
+  { id: 'apt-1', patientId: 'p-1', patientName: 'Ali Hussain', doctorId: 'doc-1', doctorName: 'Dr. Ahmed Ali', date: '2024-12-20', time: '09:00', status: 'Completed', reason: 'Fever and headache', createdAt: '2024-12-18' },
+  { id: 'apt-2', patientId: 'p-2', patientName: 'Sara Iqbal', doctorId: 'doc-2', doctorName: 'Dr. Fatima Noor', date: '2024-12-20', time: '10:30', status: 'Completed', reason: 'Skin rash', createdAt: '2024-12-18' },
+  { id: 'apt-3', patientId: 'p-3', patientName: 'Usman Tariq', doctorId: 'doc-3', doctorName: 'Dr. Hassan Raza', date: '2024-12-21', time: '11:00', status: 'Confirmed', reason: 'Chest pain', createdAt: '2024-12-19' },
+  { id: 'apt-4', patientId: 'p-4', patientName: 'Zainab Fatima', doctorId: 'doc-1', doctorName: 'Dr. Ahmed Ali', date: '2024-12-22', time: '09:30', status: 'Pending', reason: 'Routine checkup', createdAt: '2024-12-20' },
+  { id: 'apt-5', patientId: 'p-5', patientName: 'Hamza Sheikh', doctorId: 'doc-1', doctorName: 'Dr. Ahmed Ali', date: '2024-12-22', time: '14:00', status: 'Pending', reason: 'Sore throat', createdAt: '2024-12-20' },
+  { id: 'apt-6', patientId: 'p-1', patientName: 'Ali Hussain', doctorId: 'doc-2', doctorName: 'Dr. Fatima Noor', date: '2024-12-23', time: '10:00', status: 'Pending', reason: 'Follow-up skin check', createdAt: '2024-12-21' },
+  { id: 'apt-7', patientId: 'p-6', patientName: 'Nadia Khan', doctorId: 'doc-1', doctorName: 'Dr. Ahmed Ali', date: '2024-12-19', time: '15:00', status: 'Cancelled', reason: 'Back pain', createdAt: '2024-12-17' },
+  { id: 'apt-8', patientId: 'p-2', patientName: 'Sara Iqbal', doctorId: 'doc-1', doctorName: 'Dr. Ahmed Ali', date: '2024-12-23', time: '11:30', status: 'Confirmed', reason: 'Joint pain', createdAt: '2024-12-21' },
 ];
 
-export const mockAuditLogs: AuditLog[] = [
-  { id: 'al1', action: 'TICKET_CREATED', performedBy: 'u1', performedByName: 'John Carter', targetType: 'ticket', targetId: 'TKT-025', details: 'Created ticket: Database connection timeout', createdAt: '2024-03-25T10:00:00Z' },
-  { id: 'al2', action: 'TICKET_ASSIGNED', performedBy: 'a1', performedByName: 'Ahmed Khan', targetType: 'ticket', targetId: 'TKT-024', details: 'Assigned ticket to self', createdAt: '2024-03-24T15:30:00Z' },
-  { id: 'al3', action: 'TICKET_RESOLVED', performedBy: 'a2', performedByName: 'Sara Ali', targetType: 'ticket', targetId: 'TKT-020', details: 'Resolved ticket with summary', createdAt: '2024-03-23T11:00:00Z' },
-  { id: 'al4', action: 'AGENT_CREATED', performedBy: 'sa1', performedByName: 'Admin User', targetType: 'user', targetId: 'a4', details: 'Created agent: Maria Lopez (Technical)', createdAt: '2024-03-22T09:00:00Z' },
-  { id: 'al5', action: 'TICKET_NOTE_ADDED', performedBy: 'a1', performedByName: 'Ahmed Khan', targetType: 'ticket', targetId: 'TKT-018', details: 'Added investigation note', createdAt: '2024-03-21T16:45:00Z' },
-  { id: 'al6', action: 'AGENT_DEACTIVATED', performedBy: 'sa1', performedByName: 'Admin User', targetType: 'user', targetId: 'a4', details: 'Deactivated agent: Maria Lopez', createdAt: '2024-03-20T14:00:00Z' },
-  { id: 'al7', action: 'TICKET_REASSIGNED', performedBy: 'sa1', performedByName: 'Admin User', targetType: 'ticket', targetId: 'TKT-015', details: 'Reassigned from Ahmed Khan to James Wilson', createdAt: '2024-03-19T10:30:00Z' },
+// ── Prescriptions ──
+export const mockPrescriptions: Prescription[] = [
+  {
+    id: 'rx-1', patientId: 'p-1', patientName: 'Ali Hussain', doctorId: 'doc-1', doctorName: 'Dr. Ahmed Ali', appointmentId: 'apt-1',
+    medicines: [
+      { name: 'Paracetamol', dosage: '500mg', frequency: 'Twice daily', duration: '5 days' },
+      { name: 'Cetirizine', dosage: '10mg', frequency: 'Once at night', duration: '7 days' },
+    ],
+    instructions: 'Take after meals. Drink plenty of fluids.', diagnosis: 'Viral Fever with Allergic Rhinitis',
+    aiExplanation: 'You have a common viral fever combined with nasal allergy. Paracetamol will bring down the fever, and Cetirizine will help with the sneezing and runny nose. Rest well and stay hydrated.',
+    createdAt: '2024-12-20',
+  },
+  {
+    id: 'rx-2', patientId: 'p-2', patientName: 'Sara Iqbal', doctorId: 'doc-2', doctorName: 'Dr. Fatima Noor', appointmentId: 'apt-2',
+    medicines: [
+      { name: 'Hydrocortisone Cream', dosage: '1%', frequency: 'Apply twice daily', duration: '10 days' },
+      { name: 'Loratadine', dosage: '10mg', frequency: 'Once daily', duration: '14 days' },
+    ],
+    instructions: 'Avoid hot water on affected area. Use mild soap.', diagnosis: 'Contact Dermatitis',
+    createdAt: '2024-12-20',
+  },
+];
+
+// ── Diagnosis Logs ──
+export const mockDiagnosisLogs: DiagnosisLog[] = [
+  {
+    id: 'dx-1', patientId: 'p-1', patientName: 'Ali Hussain', doctorId: 'doc-1', doctorName: 'Dr. Ahmed Ali',
+    symptoms: ['Fever', 'Headache', 'Runny nose', 'Sneezing'],
+    aiResponse: 'Based on the symptoms, the patient likely has viral fever with allergic rhinitis.',
+    possibleConditions: ['Viral Fever', 'Allergic Rhinitis', 'Common Cold'],
+    riskLevel: 'Low', suggestedTests: ['CBC', 'Allergy Panel'],
+    createdAt: '2024-12-20',
+  },
+  {
+    id: 'dx-2', patientId: 'p-3', patientName: 'Usman Tariq', doctorId: 'doc-3', doctorName: 'Dr. Hassan Raza',
+    symptoms: ['Chest pain', 'Shortness of breath', 'Fatigue'],
+    aiResponse: 'Symptoms suggest potential cardiac involvement. Recommend ECG and cardiac enzymes.',
+    possibleConditions: ['Angina', 'Costochondritis', 'GERD'],
+    riskLevel: 'High', suggestedTests: ['ECG', 'Troponin', 'Chest X-ray', 'Lipid Profile'],
+    createdAt: '2024-12-21',
+  },
+  {
+    id: 'dx-3', patientId: 'p-4', patientName: 'Zainab Fatima', doctorId: 'doc-1', doctorName: 'Dr. Ahmed Ali',
+    symptoms: ['Joint pain', 'Stiffness', 'Swelling in knees'],
+    aiResponse: 'Symptoms may indicate early osteoarthritis or rheumatoid arthritis.',
+    possibleConditions: ['Osteoarthritis', 'Rheumatoid Arthritis', 'Gout'],
+    riskLevel: 'Medium', suggestedTests: ['X-ray Knee', 'ESR', 'CRP', 'Uric Acid'],
+    createdAt: '2024-12-22',
+  },
+];
+
+// Demo credentials
+export const demoCredentials = [
+  { role: 'admin', email: 'admin@clinic.com', password: 'admin123', label: 'Admin' },
+  { role: 'doctor', email: 'ahmed@clinic.com', password: 'doctor123', label: 'Doctor' },
+  { role: 'receptionist', email: 'ayesha@clinic.com', password: 'reception123', label: 'Receptionist' },
+  { role: 'patient', email: 'ali@patient.com', password: 'patient123', label: 'Patient' },
 ];
